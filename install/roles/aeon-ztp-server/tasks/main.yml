@@ -65,6 +65,12 @@
         src={{ Install_dir }}/tftpboot/ztp-cumulus.sh
         dest={{ Install_dir }}/downloads/ztp-cumulus.sh
 
+- name: symlink ztp-cros in downloads directory
+  file: state=link
+        src={{ Install_dir }}/tftpboot/ztp-cros.sh
+        dest={{ Install_dir }}/downloads/ztp-cros.sh
+
+
 - name: install aztp-db-flush utility
   file: state=link src={{ Install_dir }}/bin/aztp-db-flush
         dest=/usr/local/bin/aztp-db-flush
@@ -89,11 +95,11 @@
     name: "{{ Install_dir }}/packages/aeon-venos-0.2.0.tar.gz"
 
 # build the docs
-
-- name: Build docs using Sphinx
-  shell: make html
-  args:
-    chdir: "/opt/aeonztps/docs"
+#
+#- name: Build docs using Sphinx
+#  shell: make html
+#  args:
+#    chdir: "/opt/aeonztps/docs"
 
 - name: Remove aeon-ztp source directory
   file:
