@@ -4,8 +4,6 @@
 
 # Variables exposed to this script
 # - BOOTFILE_NAME_OPTION: URL from DHCP option 67 (bootfile-name)
-# - ZTP_NS_CMD:           Namespace cmd according to in-band/ out-of-band
-#                         ZTP
 
 # trap and print what failed
 function error () {
@@ -30,7 +28,7 @@ echo "-------------------------------------"
 echo ""
 
 function kickstart_aeon_ztp(){
-   ${ZTP_NS_CMD} wget -O /dev/null ${HTTP}/api/register/cros
+   wget -O /dev/null ${HTTP}/api/register/cros
 }
 
 kickstart_aeon_ztp
