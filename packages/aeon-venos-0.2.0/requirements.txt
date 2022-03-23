@@ -1,4 +1,5 @@
 requests
 lxml
 pyeapi
-paramiko<2.0.0
+netmiko
+paramiko==2.7.2

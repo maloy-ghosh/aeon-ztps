@@ -1,3 +1,6 @@
+# -*- coding: future_fstrings -*-
+
+
 # Copyright 2014-present, Apstra, Inc. All rights reserved.
 #
 # This source code is licensed under End User License Agreement found in the
@@ -5,9 +8,7 @@
 
 import socket
 import re
-
-import paramiko
-from paramiko.ssh_exception import NoValidConnectionsError
+import netmiko
 from aeon.exceptions import LoginNotReadyError, ConfigError, CommandError
 
 
@@ -21,42 +22,82 @@ class Connector(object):
         self.user = kwargs.get('user')
         self.passwd = kwargs.get('passwd')
 
-        self._client = paramiko.SSHClient()
-        self._client.load_system_host_keys()
-        self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        cros = {
+                "device_type" : "cdot_cros",
+                "host" : self.hostname,
+                "username" : self.user,
+                "password" : self.passwd,
+                }
 
-        self.open()
 
-    def open(self):
+        self._nc = netmiko.ConnectHandler(**cros)
         try:
-            self._client.connect(
-                self.hostname, port=self.port,
-                username=self.user, password=self.passwd)
+            self._nc = netmiko.ConnectHandler(**cros)
 
         except Exception as exc:
             raise LoginNotReadyError(exc=exc, message=exc.message)
 
     def close(self):
-        self._client.close()
+        self._nc.disconnect()
 
-    def _strip_ascii_colorcodes(self, string):
+    def _sanitize_output(self, output, command):
+
+        #
+        # Replace header of the form
+        # Running CLI command
+        # <cmd>
+        #
+        output = output.replace("Running CLI command\n%s" % (command), "")
+
+        # Remove color codes etc
         ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-        return ansi_escape.sub('', string)
+        output = ansi_escape.sub('', output)
+
+        return output
 
     def execute(self, commands, stop_on_error=True):
         results = []
         exit_code_collector = 0
 
         for cmd in commands:
-            stdin, stdout, stderr = self._client.exec_command(cmd)
-            exit_code = stdout.channel.recv_exit_status()
+            output = ""
+            exit_code = 0
+            try:
+                output = self._nc.send_command(cmd)
+            except:
+                exit_code = 1
+
+            output = self._sanitize_output(output, cmd)
             exit_code_collector |= exit_code
 
             results.append(dict(cmd=cmd, exit_code=exit_code,
-                                stdout=self._strip_ascii_colorcodes(stdout.read()),
-                                stderr=self._strip_ascii_colorcodes(stderr.read())))
+                                stdout=output,
+                                stderr=output))
 
             if stop_on_error is True and exit_code != 0:
                 return False, results
 
         return bool(0 == exit_code_collector), results
+
+    def configure(self, commands, comment=""):
+        cmd_enter_output = ""
+        cmd_exec_output = ""
+        exit_code = 0
+        error_msg = ""
+        output=""
+
+        try:
+            cmd_enter_output = self._nc.send_config_set(commands)
+            cmd_exec_output = self._nc.commit(comment=comment)
+            output = cmd_exec_output
+
+        except Exception as e:
+            exit_code = 1
+            error_msg = e.msg
+            output = cmd_enter_output + "\n" + cmd_exec_output
+
+        results = dict(exit_code = exit_code,
+                       stdout=output,
+                       stderr=error_msg)
+
+        return exit_code, results
