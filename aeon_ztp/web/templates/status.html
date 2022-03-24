@@ -36,6 +36,8 @@
   {% set class = 'info' %}
   {% elif device.state == 'DONE' %}
   {% set class = 'success' %}
+  {% else %}
+  {% set class = 'success' %}
   {% endif %}
     <tr class="{{class}}">
       <td>{{device.ip_addr}}</td>
