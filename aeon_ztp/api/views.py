@@ -25,6 +25,38 @@ api = Blueprint('api', __name__)
 _AEON_TOPDIR = os.getenv('AEON_TOPDIR')
 
 
+def allowed_path(folder):
+    """ Checks against valid_paths if specified folder is permitted within the application
+
+    Args:
+        folder (str): Folder name to search for
+
+    Returns:
+        bool: True if path exists in application
+
+    """
+    # TODO: Absolute path checking
+    folder = folder.strip('/')
+    for path in valid_paths():
+        if folder.startswith(path.strip('/')):
+            return True
+    return False
+
+
+def valid_paths():
+    """ A list of valid path names permitted within this application context
+
+    Returns:
+        list: List of valid root paths
+
+    """
+    return [
+        '/downloads',
+        '/etc',
+        '/vendor_images',
+        '/tftpboot',
+    ]
+
 @api.route('/downloads/<path:filename>', methods=['GET'])
 def download_file(filename):
     from_dir = path.join(_AEON_TOPDIR, 'downloads')
@@ -256,6 +288,36 @@ def _put_device_facts():
             item=rqst_data), 404
 
     return jsonify(ok=True)
+
+# -----------------------------------------------------------------------------
+#                  PUT: /upload/path/to/file
+# -----------------------------------------------------------------------------
+
+
+@api.route('/upload/<path:filename>', methods=['PUT'])
+def upload_file(filename):
+    if (filename == ''):
+        return jsonify(ok=False,
+                       message='No input file'), 400
+
+    d_name = os.path.dirname(filename)
+
+    if (not allowed_path(d_name)):
+        return jsonify(ok=False,
+                       message='Path: %s prohibited for upload.' % (d_name)), 403
+
+    filepath = os.path.join(_AEON_TOPDIR, filename)
+
+    try:
+        f = open(filepath, "w")
+        f.write(request.data)
+        f.close()
+        return jsonify(ok=True, message="File uploaded")
+
+    except Exception, e:
+        return jsonify(ok=False,
+                       message=repr(e)), 400
+
 
 
 # -----------------------------------------------------------------------------
