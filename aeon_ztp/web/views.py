@@ -440,16 +440,17 @@ def upload(folder):
         return render_template('error.html', error="No file upload")
     filename = request.files['file']
 
+    s_filename = secure_filename(filename.filename)
+
     if filename.filename == '':
         return render_template('error.html', error="No selected file")
     if not allowed_file(folder, filename.filename):
         return render_template('error.html', error="File not permitted")
 
     # check if we have access before just doing this
-    filepath = os.path.join(_AEON_TOPDIR, folder, filename.filename)
+    filepath = os.path.join(_AEON_TOPDIR, folder, s_filename)
 
     if filename:
-        filename = secure_filename(filename.filename)
         try:
             filename.save(filepath)
             # upload success!
@@ -462,11 +463,11 @@ def upload(folder):
             if code == errno.EACCES:
                 whoami = pwd.getpwuid(os.getuid())[0]
                 error = "Could not write {filename} to {filepath} - for {whoami}: {reason} ({code})".format(
-                    whoami=whoami, filepath=filepath, filename=filename, code=code, reason=reason)
+                    whoami=whoami, filepath=filepath, filename=s_filename, code=code, reason=reason)
                 flash(error, 'danger')
         return browse(root=folder)
     else:
-        error = "Could not write file {filename} to {filepath}".format(filename=filename, filepath=filepath)
+        error = "Could not write file {filename} to {filepath}".format(filename=s_filename, filepath=filepath)
         flash(error, 'warning')
         return browse(root=folder)
 
