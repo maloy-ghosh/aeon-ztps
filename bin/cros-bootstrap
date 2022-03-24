@@ -209,6 +209,84 @@ def wait_for_device(countdown, poll_delay):
 
 # ##### -----------------------------------------------------------------------
 # #####
+# #####                           General config process
+# #####
+# ##### -----------------------------------------------------------------------
+
+def push_cfg_file(dev, cfg_f_path):
+    url = cfg_f_path.replace(g_cli_args.topdir, g_self_server)
+    f_name = os.path.basename(cfg_f_path)
+
+    push_cmd = ["files download url {}".format(url)]
+    config_cmd = ["config-file operation merge best-effort file {}".format(f_name)]
+
+    post_device_status(
+        dev=dev, state='CONFIG',
+        message='applying config: %s' % f_name)
+
+    try:
+        dev.api.execute(push_cmd)
+        dev.api.configure(config_cmd, comment = "Provisioned from {} via ZTP".format(url))
+    except:
+        raise
+
+    g_log.info("Provisioned {}".format(url))
+
+
+
+def do_push_config(dev):
+    topdir = g_cli_args.topdir
+    config_dir = os.path.join(topdir, 'etc', 'configs', 'cros')
+    all_fpath = os.path.join(config_dir, 'all.cfg')
+    model_fpath = os.path.join(config_dir, dev.facts['hw_model'] + '.cfg')
+    
+    device_dir = os.path.join(config_dir, dev.facts['serial_number'])
+    device_startup_path = os.path.join(device_dir, "startup.cfg")
+
+    try:
+        os.makedirs(device_dir)
+    except:
+        pass
+
+    # TODO: Add support for config file generation based on templates
+
+    changed = False
+    try:
+        if os.path.isfile(device_startup_path):
+            g_log.info('pushing device specific startup config file')
+            push_cfg_file(dev, device_startup_path)
+            changed = True
+        else:
+            g_log.info('no device startup config file found')
+            
+            if os.path.isfile(all_fpath):
+                g_log.info('pushing all config to device')
+                push_cfg_file(dev, all_fpath)
+                changed = True
+            else:
+                g_log.info('no all.cfg file found')
+
+            if os.path.isfile(model_fpath):
+                g_log.info('pushing model config to device')
+                push_cfg_file(dev, model_fpath)
+                changed = True
+            else:
+                g_log.info('no model config file found: {}'.format(model_fpath))
+
+    except Exception as exc:
+        g_log.critical("unable to push config: {}".format(exc.message))
+        exit_results(dict(
+            ok=False,
+            error_type='config',
+            message=exc.message))
+
+    if changed is True:
+        dev.api.execute(["copy running-config startup-config"])
+
+
+
+# ##### -----------------------------------------------------------------------
+# #####
 # #####                           OS install process
 # #####
 # ##### -----------------------------------------------------------------------
@@ -315,6 +393,7 @@ def main():
 
     g_log.info("proceeding with bootstrap")
 
+    do_push_config(dev)
     ensure_os_version(dev)
 
     g_log.info("bootstrap process finished")
