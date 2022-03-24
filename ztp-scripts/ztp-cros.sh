@@ -4,6 +4,9 @@
 
 # Variables exposed to this script
 # - BOOTFILE_NAME_OPTION: URL from DHCP option 67 (bootfile-name)
+# - OWN_IP:               IP address identifier for ZTP service
+
+ALLOW_REPROVISION="true"
 
 # trap and print what failed
 function error () {
@@ -27,11 +30,19 @@ echo "ZTP auto-provision from: ${HTTP}"
 echo "-------------------------------------"
 echo ""
 
-function kickstart_aeon_ztp(){
+function remove_old_ztp() {
+  if [[ "$ALLOW_REPROVISION" == "true" && "$OWN_IP" ]]; then
+    echo "Triggering for re-provisioning"
+    wget -O /dev/null ${HTTP}/devices/delete/$OWN_IP
+  fi
+}
+
+function kickstart_ztp(){
    wget -O /dev/null ${HTTP}/api/register/cros
 }
 
-kickstart_aeon_ztp
+remove_old_ztp
+kickstart_ztp
 
 # CROS-AUTOPROVISIONING
 
