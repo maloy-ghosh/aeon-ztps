@@ -1,0 +1,9 @@
+system hostname {{ hostname }}
+{% if banner.prelogin is defined %}
+system cli banner "{{ banner.prelogin.replace("\n", "\\n") }}"
+{% endif %}
+{% if banner.postlogin is defined %}
+system cli postlogin-banner "{{ banner.postlogin.replace("\n", "\\n") }}"
+{% endif %}
+
+

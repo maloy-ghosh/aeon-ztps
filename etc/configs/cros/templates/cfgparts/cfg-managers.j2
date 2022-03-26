@@ -1,0 +1,30 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! EMS/NMS configs
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+{% for mgr in managers %}
+{% for service in mgr.services %}
+{% if service == 'snmp' %}
+snmp notify {{ mgr.name }}
+ tag {{ mgr.name }}
+!
+snmp target {{ mgr.name }}
+ tag [ {{ mgr.name }} ]
+ v2c sec-name public
+ ip  {{ mgr.address }}
+ vrf {{ mgr.vrf }}
+!
+{% endif %}
+{% if service == 'syslog' %}
+syslog remote-action {{ loop.index0 }}
+ syslog-server {{ mgr.address }}
+ vrf           {{ mgr.vrf }}
+!
+syslog rule {{ loop.index0 }}
+ match severity notice
+ action remote {{ loop.index0 }}
+!
+{% endif %}
+{% endfor %}
+{% endfor %}
+

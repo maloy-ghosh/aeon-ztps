@@ -1,0 +1,64 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! VRF L3 configuration
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+{% for vrf in vrfs %}
+{% if vrf.ecmp == 'enabled' %}
+{% if vrf.name == 'global' or vrf.name == 'default' %}
+router rib address-family ipv4 unicast
+ equal-cost-multiple-path all
+!
+{% else %}
+router rib address-family ipv4 {{ vrf.name }}
+ equal-cost-multiple-path all
+!
+router rib address-family ipv6 {{ vrf.name }}
+ equal-cost-multiple-path all
+!
+{% endif %}
+{% endif %}
+
+{% set vrfproto = namespace(ospf=False, bgp=False) %}
+{% if vrf.routerid is defined %}
+  {% set routerid = vrf.routerid %}
+{% else %}
+  {% set routerid = globalrouterid %}
+{% endif %}
+
+
+{% for l3port in vrf.interfaces %}
+interface {{ if_name_to_path(l3port.name) }}
+  {% if l3port.admin %}
+  admin-status {{ l3port.admin }}
+  {% endif %}
+  {{ vrfcmd_from_vrfname(vrf.name) }}
+  {% if l3port.address %}
+    {% if l3port.address is string %}
+  ipv4 address {{ ip_from_ipprefix(l3port.subnet) }}
+     prefix {{ prefix_from_ipprefix(l3port.subnet) }}
+  !
+    {% else %}
+      {% for sub in l3port.address %}
+  ipv4 address {{ ip_from_ipprefix(sub) }}
+     prefix {{ prefix_from_ipprefix(sub) }}
+  !
+!
+      {% endfor %}
+    {% endif %}
+  {% endif %}
+  {% if l3port.ospf is defined %}
+    {% set vrfproto.ospf = True %}
+  {% endif %}
+  {% if l3port.bgp is defined %}
+    {% set vrfproto.bgp = True %}
+    {% set globalproto.bgp = True %}
+  {% endif %}
+{% endfor %}
+
+{% include 'cfgparts/cfg-vrf-services.j2' %}
+{% include 'cfgparts/cfg-vrf-ospf.j2' %}
+{% include 'cfgparts/cfg-vrf-staticroute.j2' %}
+{% endfor %}
+
+

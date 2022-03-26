@@ -1,0 +1,12 @@
+{% if AAA.capubkey is defined %}
+AAA authentication ssh-trusted-user-CA-public-key "{{ AAA.capubkey }}"
+{% endif %}
+
+{% for user in AAA.users %}
+AAA user {{ user.name }}
+{% if user.role is defined %}
+  role {{ user.role }}
+{% endif %}
+  encrypted-password "{{ user.hash }}"
+!  
+{% endfor %}

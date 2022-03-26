@@ -1,0 +1,43 @@
+---
+
+{% set deviceipoctets = device_ip.split('.') %}
+hostname: {{ hw_model }}-{{ deviceipoctets[2] }}-{{ deviceipoctets[3] }}
+banner:
+  postlogin: |
+      Centre for Development of Telematics
+      Welcome to CROS CLI
+      
+      (Provisioned by ZTP from {{ serverip }})
+      
+
+AAA:
+  capubkey: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDLYz0ONMtbJVEuzeFVPATbK2wmGbcKqDbr98QrsqL5/+MXUZit+D9+IKua0D0VsDMtjTRfFHiwshqTouIHteB8pyy6e2CNxtpNOEzScA9ZuC6/4faOT6MgUJD0so6eEabYaWlUft5osd9x8LT4LvJyd88GP1YLouusD+24GsNk9lFezWyTU00sdDXfeUzZolOmcukior1AmXcf8d5ZxxUOlWUBMpff5JguTRcDCFHaezHaVf08MWSLGh+m6r0oUST713UbMe3qSuDZkOO0waj0lw/hXZQ5csCj00sS/q+PB7TQ86SFcftnihfCIW0c/vGLcrnV+3QpQ+MnBDA+fphl cdot@ngn-srv-2"
+
+  users:
+    - name: rootsystem
+      hash: "$6$uAwi4Zes6ZYzCBSi$Ruifh0HkreEYkkL.ABj6u01bUsVslh/QMi1h/rja9rsl.5du0G7yAiUrhv9eR2xnGw7xf6Ms2k2Bmv.Mgnjs30\n"
+
+    - name: operator
+      role: configread
+      hash: "$6$Mz7Bdk1yXJPF9n0V$pS0aLzRow7KxShbFW9wLZIY/utJYgWGET1qZgJakxkiBTcS9juJKj4v0uTQetkncdrdi5SYp7OSTsqLgRTfqR1\n"
+    
+    
+vrfs:
+  - name: mgmt-vrf
+    services:
+      - snmp
+      - sshd
+
+    whitelists:
+      - subnet: 192.168.0.0/24
+        services:
+          - sshd
+          - snmp
+
+managers:
+  - name: librenms
+    address: 192.168.111.56
+    vrf: mgmt-vrf
+    services:
+      - snmp
+      - syslog 

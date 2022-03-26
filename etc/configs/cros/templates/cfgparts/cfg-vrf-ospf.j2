@@ -1,0 +1,18 @@
+{% if vrfproto.ospf %}
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! VRF "{{ vrf.name }}" OSPF configuration 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+router ospf {{ vrf.protocolinstance }}
+ router-id {{ routerid }}
+ administrative-status up
+ {{ vrfcmd_from_vrfname(vrf.name) }}
+ area 0 
+{% for l3port in l3portlist %}
+    network {{ ip_from_ipprefix(l3port.subnet) }} authentication none
+    !
+{% endfor %}
+  !
+!
+{% endif %}

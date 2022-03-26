@@ -1,0 +1,15 @@
+top
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! VRF {{ vrf.name }} services
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+{{ vrfcmd_from_vrfname(vrf.name) }}
+{% for service in vrf.services %}
+  {{ service_cmd(service) }}
+{% endfor %}
+{% for whitelist in vrf.whitelists %}
+{% for serv in whitelist.services %}
+  {{ whitelist_service_cmd(whitelist.subnet, serv) }}
+{% endfor %}
+{% endfor %}
+!

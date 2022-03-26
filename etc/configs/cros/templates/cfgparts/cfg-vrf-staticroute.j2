@@ -1,0 +1,25 @@
+
+{% if vrf.staticroutes is defined %}
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! VRF "{{ vrf.name }}" static route configurations
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+router static {{ vrfcmd_from_vrfname(vrf.name) }}
+{% for target in vrf.staticroutes %}
+{% for nh in target.nexthops %}
+  {{ target.target }} next-hop {{ nh.hop }}
+{% if nh.action is defined %}
+    action {{ nh.action }}
+{% endif %}
+{% if nh.description is defined %}
+    description "{{ nh.description }}"
+{% endif %}
+{% if nh.cost is defined %}
+    path-cost {{ nh.cost }}
+{% endif %}
+  !  
+{% endfor %}
+{% endfor %}
+!
+{% endif %}
