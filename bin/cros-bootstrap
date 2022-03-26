@@ -217,12 +217,15 @@ def push_cfg_file(dev, cfg_f_path):
     url = cfg_f_path.replace(g_cli_args.topdir, g_self_server)
     f_name = os.path.basename(cfg_f_path)
 
-    push_cmd = ["files download url {}".format(url)]
+    if not url.startswith("http://"):
+        url = "http://" + url
+
+    push_cmd = ["files download batch-mode url {}".format(url)]
     config_cmd = ["config-file operation merge best-effort file {}".format(f_name)]
 
     post_device_status(
         dev=dev, state='CONFIG',
-        message='applying config: %s' % f_name)
+        message='applying config: [%s]' % f_name)
 
     try:
         dev.api.execute(push_cmd)
@@ -283,6 +286,10 @@ def do_push_config(dev):
     if changed is True:
         dev.api.execute(["copy running-config startup-config"])
 
+
+def trigger_ztp_terminate(dev):
+    dev.api.execute(["ztp terminate"])
+    return
 
 
 # ##### -----------------------------------------------------------------------
@@ -350,6 +357,7 @@ def ensure_os_version(dev):
 
     if not os_install['image']:
         g_log.info('no software install required')
+        trigger_ztp_terminate(dev)
         return dev
 
     g_log.info('software image install required: %s' % os_install['image'])
