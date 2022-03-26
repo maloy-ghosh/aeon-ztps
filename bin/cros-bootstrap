@@ -10,6 +10,7 @@ import time
 import socket
 import requests
 import yaml
+from pkg_resources import parse_version
 
 from aeon.cros.device import Device
 from aeon.exceptions import ProbeError, LoginNotReadyError, UnauthorizedError
@@ -343,7 +344,7 @@ def install_os(dev, image_name):
     post_device_status(dev=dev, state='OS-INSTALL', message=msg)
 
     all_good, results = dev.api.execute([
-        'sudo /usr/cros/bin/cl-img-install -sf http://{server}/images/{os_name}/{image_name}'
+        'release-upgrade batch-mode autoreboot url http://{server}/images/{os_name}/{image_name}'
         .format(server=g_cli_args.server, os_name=_OS_NAME, image_name=image_name)
     ])
 
@@ -351,6 +352,19 @@ def install_os(dev, image_name):
         import pdb
         pdb.set_trace()
 
+def upgrade_required(dev, os_install):
+    try:
+        pattern = os_install["regex_match"]
+        current_ver = dev.facts["os_version"]
+        image_ver = re.match(pattern, os_install["image"]).group(0)
+
+        if (parse_version(image_ver) > parse_version(current_ver)):
+            return True
+        else:
+            return False
+
+    except:
+        return False
 
 def ensure_os_version(dev):
     os_install = get_required_os(dev)
@@ -370,7 +384,6 @@ def ensure_os_version(dev):
         dev, state='OS-REBOOTING',
         message='OS install completed, now rebooting ... please be patient')
 
-    dev.api.execute(['sudo reboot'])
     time.sleep(g_cli_args.init_delay)
     return wait_for_device(countdown=g_cli_args.reload_delay, poll_delay=10)
 

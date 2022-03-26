@@ -107,6 +107,13 @@ class Device(object):
         #facts['fqdn'] = decoded["Host"]
         facts['hostname'] = decoded["Host"]
         facts['os_version'] = decoded["Software Version"]
+
+        try:
+            buildno = int(decoded["Build"].split(" ")[0])
+            facts['os_version'] += ".{}".format(buildno)
+        except Exception as e:
+            self.loghandle.info(e.message)
+
         facts['vendor'] = "C-DOT"
         if decoded['Serial Num'] != "n/a":
             facts['serial_number'] = decoded['Serial Num']
