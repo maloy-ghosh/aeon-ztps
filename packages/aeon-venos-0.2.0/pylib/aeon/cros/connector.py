@@ -1,6 +1,3 @@
-# -*- coding: future_fstrings -*-
-
-
 # Copyright 2014-present, Apstra, Inc. All rights reserved.
 #
 # This source code is licensed under End User License Agreement found in the
@@ -88,12 +85,12 @@ class Connector(object):
 
         try:
             cmd_enter_output = self._nc.send_config_set(commands)
-            cmd_exec_output = self._nc.commit(comment=comment)
+            cmd_exec_output = self._nc.commit(comment=comment, delay_factor=100)
             output = cmd_exec_output
 
         except Exception as e:
             exit_code = 1
-            error_msg = e.msg
+            error_msg = e.message
             output = cmd_enter_output + "\n" + cmd_exec_output
 
         results = dict(exit_code = exit_code,

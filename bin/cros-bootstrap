@@ -11,8 +11,11 @@ import socket
 import requests
 import yaml
 from pkg_resources import parse_version
+from jinja2 import Environment, FileSystemLoader
+
 
 from aeon.cros.device import Device
+from aeon.cros.utils import *
 from aeon.exceptions import ProbeError, LoginNotReadyError, UnauthorizedError
 from aeon.exceptions import ConfigError, CommandError
 
@@ -86,6 +89,8 @@ group.add_argument(
 
 g_cli_args = psr.parse_args()
 g_self_server = g_cli_args.server
+g_jinja_env = None
+g_jinja_template_env = None
 
 
 def setup_logging(logname, logfile, target):
@@ -235,17 +240,81 @@ def push_cfg_file(dev, cfg_f_path):
         raise
 
     g_log.info("Provisioned {}".format(url))
+    return
+
+def initaialize_jinja(templatedir):
+    global g_jinja_template_env
+    global g_jinja_env
+    g_jinja_env = Environment(loader = FileSystemLoader(templatedir), trim_blocks=True, lstrip_blocks=True)
+    g_jinja_template_env = Environment(loader = FileSystemLoader(os.path.join(templatedir, "templates")), trim_blocks=True, lstrip_blocks=True)
+   
+    return
 
 
+def try_push_cfg_file(dev, cfgfile):
+    bname = os.path.basename(cfgfile)
+    if (os.path.isfile(cfgfile)):
+        g_log.info('pushing {} to device'.format(bname))
+        push_cfg_file(dev, cfgfile)
+        return True
+
+    return False
+
+
+
+def try_push_yaml_cfg(dev, basedir, template):
+    if not os.path.isfile(os.path.join(basedir, template)):
+        return
+
+    cfg = g_jinja_env.get_template(template)
+
+    data = {
+                'device_ip' : g_cli_args.target,
+                'serverip'  : g_self_server,
+                'hw_model'  : dev.facts['hw_model'],
+                'serial_number' : dev.facts['serial_number']
+        }
+
+    stage2_data = cfg.render(data)
+
+    stage2_yaml =  yaml.safe_load(stage2_data)
+
+    stage2_temp = g_jinja_template_env.get_template("ztp-cfg.j2")
+    jinja2_register_all_funcs(stage2_yaml);
+
+    stage2_cfg = stage2_temp.render(stage2_yaml)
+    g_log.info("Stage2 config =\n {}".format(stage2_cfg));
+
+    stage2_cfg_path = os.path.join(basedir, "generated", "dev-{}.cfg".format(g_cli_args.target))
+
+    try:
+        os.makedirs(os.path.join(basedir, "generated"))
+    except:
+        pass
+
+    f = open(stage2_cfg_path, "w")
+    f.write(stage2_cfg)
+    f.close()
+
+    g_log.info("Generated config file {}".format(stage2_cfg_path))
+    try_push_cfg_file(dev, stage2_cfg_path)
+    return
 
 def do_push_config(dev):
     topdir = g_cli_args.topdir
     config_dir = os.path.join(topdir, 'etc', 'configs', 'cros')
     all_fpath = os.path.join(config_dir, 'all.cfg')
+    all_template_file = "all.yaml.j2"
     model_fpath = os.path.join(config_dir, dev.facts['hw_model'] + '.cfg')
+    model_template_file = dev.facts['hw_model'] + '.yaml.j2'
     
     device_dir = os.path.join(config_dir, dev.facts['serial_number'])
     device_startup_path = os.path.join(device_dir, "startup.cfg")
+    device_template_file = os.path.join(dev.facts['serial_number'], "device.yaml.j2")
+
+    initaialize_jinja(config_dir)
+    g_log.info("jinja env: {}".format(g_jinja_env.__repr__))
+    g_log.info("jinja template env: {}".format(g_jinja_template_env.__repr__))
 
     try:
         os.makedirs(device_dir)
@@ -263,19 +332,12 @@ def do_push_config(dev):
         else:
             g_log.info('no device startup config file found')
             
-            if os.path.isfile(all_fpath):
-                g_log.info('pushing all config to device')
-                push_cfg_file(dev, all_fpath)
-                changed = True
-            else:
-                g_log.info('no all.cfg file found')
-
-            if os.path.isfile(model_fpath):
-                g_log.info('pushing model config to device')
-                push_cfg_file(dev, model_fpath)
-                changed = True
-            else:
-                g_log.info('no model config file found: {}'.format(model_fpath))
+            changed = changed or try_push_cfg_file(dev, all_fpath)
+            changed = changed or try_push_yaml_cfg(dev, config_dir, all_template_file)
+            changed = changed or try_push_cfg_file(dev, model_fpath)
+            changed = changed or try_push_yaml_cfg(dev, config_dir, model_template_file)
+            changed = changed or try_push_yaml_cfg(dev, config_dir, device_template_file)
+                
 
     except Exception as exc:
         g_log.critical("unable to push config: {}".format(exc.message))
