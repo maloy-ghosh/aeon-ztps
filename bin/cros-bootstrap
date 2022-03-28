@@ -235,7 +235,9 @@ def push_cfg_file(dev, cfg_f_path):
 
     try:
         dev.api.execute(push_cmd)
+        time.sleep(2)
         dev.api.configure(config_cmd, comment = "Provisioned from {} via ZTP".format(url))
+        time.sleep(5)
     except:
         raise
 
@@ -365,10 +367,11 @@ def get_required_os(dev):
     profile_dir = os.path.join(g_cli_args.topdir, 'etc', 'profiles', 'default', _OS_NAME)
     conf_fpath = os.path.join(profile_dir, 'os-selector.cfg')
 
-    cmd = "{topdir}/bin/aztp-os-selector -m '{hw_model}' -o '{os_ver}' -c {config}".format(
+    cmd = "{topdir}/bin/aztp-os-selector -m '{hw_model}' -o '{os_ver}' -s '{serial_number}' -c {config}".format(
         topdir=g_cli_args.topdir,
         hw_model=dev.facts['hw_model'],
         os_ver=dev.facts['os_version'],
+        serial_number=dev.facts['serial_number'],
         config=conf_fpath)
 
     g_log.info('os-select: [%s]' % cmd)
@@ -477,6 +480,8 @@ def main():
     g_log.info("proceeding with bootstrap")
 
     do_push_config(dev)
+    time.sleep(g_cli_args.init_delay)
+
     ensure_os_version(dev)
 
     g_log.info("bootstrap process finished")

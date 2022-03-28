@@ -52,6 +52,11 @@ def cli_parse(cmdargs=None):
         '-m', '--hw_model', required=True,
         help='hardware model string')
 
+    psr.add_argument(
+        '-s', '--serial_number', required=True,
+        help='exact device serial number')
+
+
     # any error with args parsing will raise an exception;
     # this will be caught in the calling environment and
     # handled properly
@@ -82,6 +87,32 @@ def load_cfg(filepath):
 def match_hw_model(args, cfg_data):
     # find entry matching the hw_model
     item_match = namedtuple('item_match', ['hw_match', 'data'])
+
+    # First eheck if any matching entry for serial number
+
+    matches = filter(
+        None,
+        [re.match(pattern=regex, string=args.serial_number,
+                  flags=re.IGNORECASE)
+            for regex in cfg_data.keys()])
+
+    
+    n_found = len(matches)
+
+    if n_found > 1:
+        raise HwMultiMatchError(
+            'matching both: {}'
+            .format([m.re.pattern for m in matches])
+        )
+
+
+    if (n_found == 1):
+        pattern = matches[0].re.pattern
+        return item_match(pattern, cfg_data[pattern])
+
+
+    # We are here means exact serial number match did not work.
+    # Next try is based on hw_model
 
     matches = filter(
         None,
