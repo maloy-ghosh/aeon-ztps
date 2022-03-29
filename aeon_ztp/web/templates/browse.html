@@ -5,12 +5,14 @@
   {# <li><a href="{{ url_for('browse') }}">browse</a></li> #}
   <li><a href="{{ url_for('web.browse') }}">browse</a></li>
 {% if dirpath is defined and dirpath != '/' %}
+  {% set ns = namespace(prev='') %}
   {% for crumb in dirpath.split('/') -%}
     {% if loop.last %}
-    <li class="active"><a href="/browse/{{ prev }}{{ crumb }}">{{ crumb }}</a></li>
+    <li class="active"><a href="/browse/{{ ns.prev }}{{ crumb }}">{{ crumb }}</a></li>
     {% else %}
-     <li><a href="/browse/{{ prev }}{{ crumb }}">{{ crumb }}</a></li>
+     <li><a href="/browse/{{ ns.prev }}{{ crumb }}">{{ crumb }}</a></li>
     {% endif %}
+    {% set ns.prev = ns.prev + crumb + '/' %}
   {% endfor %}
 {% endif %}
 </ol>

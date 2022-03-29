@@ -8,20 +8,21 @@
   {# <li><a href="{{ url_for('browse') }}">browse</a></li> #}
   <li><a href="{{ url_for('web.browse') }}">browse</a></li>
 {% if folder != '/' %}
+  {% set ns = namespace(prev='') %}
   {% for crumb in folder.split('/') -%}
     {% if loop.last %}
     <li class="active"><a href="/view/{{ folder }}">{{ crumb }}</a></li>
     {% else %}
-     <li><a href="/browse/{{ prev }}{{ crumb }}">{{ crumb }}</a></li>
+    <li><a href="/browse/{{ ns.prev }}{{ crumb }}">{{ crumb }}</a></li>
+    {% set ns.prev = ns.prev + crumb + '/' %}
     {% endif %}
   {% endfor %}
 {% endif %}
 </ol>
 
-{{ stat }}
 <table>
-<tr><td><p>File name</p></tr></td>
-<tr><td><p>File size </p></tr></td><td>{{ stat.size }} </td></tr>
+  <tr><th><p>File name </p></th><td><p> : {{ filename }} </p></td></tr>
+  <tr><th><p>File size </p></th><td><p> : {{ stat.st_size|filesizeformat }}</p></td></tr>
 </table>
 <div class="highlight">
 {{ content|safe }}

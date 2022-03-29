@@ -14,12 +14,8 @@
     <th>OS Version</th>
     <th>State</th>
     <th>Message</th>
-    <th>Created At</th>
     <th>Updated at</th>
-    <th>Bootstrapper logs</th>
-    <th>Celery Logs</th>
-    <th>DHCP Logs</th>
-    <th>DHCP Lease</th>
+    <th>ZTP logs</th>
     <th>Delete</th>
   </tr>
   {% for device in devices %}
@@ -30,14 +26,10 @@
   {% set class = 'active' %}
   {% elif device.state == 'FINALLY' %}
   {% set class = 'active' %}
-  {% elif device.state == 'START' %}
-  {% set class = 'info' %}
-  {% elif device.state == 'AWAIT-ONLINE' %}
-  {% set class = 'info' %}
   {% elif device.state == 'DONE' %}
   {% set class = 'success' %}
   {% else %}
-  {% set class = 'success' %}
+  {% set class = 'info' %}
   {% endif %}
     <tr class="{{class}}">
       <td>{{device.ip_addr}}</td>
@@ -47,12 +39,8 @@
       <td>{{device.os_version}}</td>
       <td><span class="label label-{{class}}">{{device.state}}</span></td>
       <td>{{device.message}}</td>
-      <td>{{device.created_at}}</td>
-      <td>{{device.updated_at}}</td>
-      <td><a href="/logs?bootstrapper=y&searchfilter={{device.ip_addr}}">Bootstrapper Logs</a></td>
-      <td><a href="/logs?celery=y&searchfilter={{device.ip_addr}}">Celery logs</a></td>
-      <td><a href="/logs?dhcp=y&searchfilter={{device.ip_addr}}">DHCP Logs</a></td>
-      <td><a href="/dhcp?ip={{device.ip_addr}}">DHCP Lease</a></td>
+      <td>{{" ".join(device.updated_at.split("T"))}}</td>
+      <td><a href="/logs?bootstrapper=y&searchfilter={{device.ip_addr}}">ZTP Logs</a></td>
       <td><a href="/devices/delete/{{device.ip_addr}}"><button type="button" class="btn btn-warning">Delete</button></a></td>
     </tr>
   {% endfor %}

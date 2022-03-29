@@ -12,6 +12,7 @@ import errno
 import os
 import pwd
 import re
+import datetime
 
 import aeon_ztp
 import magic
@@ -448,7 +449,7 @@ def upload(folder):
         return render_template('error.html', error="File not permitted")
 
     # check if we have access before just doing this
-    filepath = os.path.join(_AEON_TOPDIR, folder, s_filename)
+    filepath = os.path.join(_AEON_TOPDIR, folder, filename.filename)
 
     if filename:
         try:
@@ -516,8 +517,9 @@ def browse(root):
         mimetype = mime.from_file(f)
         # icon = get_icon(mimetype)
         size = stat.st_size
-        mtime = stat.st_mtime
-        ctime = stat.st_ctime
+        # mtime = stat.st_mtime
+        mtime = datetime.datetime.fromtimestamp(stat.st_mtime).strftime("%d-%m-%Y %H:%M:%S")
+        ctime = datetime.datetime.fromtimestamp(stat.st_ctime).strftime("%d-%m-%Y %H:%M:%S")
         name = filename
         files.append({'name': name, 'size': size, 'mtime': mtime, 'ctime': ctime, 'mimetype': mimetype, 'link': f})
 
@@ -565,7 +567,7 @@ def view_file(filename):
             lexer = TextLexer()
             code = highlight(data, lexer, formatter)
         stat = os.stat(filename)
-        return render_template('view.html', content=code, folder=folder, stat=stat, filename=filename)
+        return render_template('view.html', content=code, folder=folder, stat=stat, filename=os.path.basename(filename))
 
     except (OSError, IOError) as e:
         code = e[0]
