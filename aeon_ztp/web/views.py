@@ -504,6 +504,8 @@ def browse(root):
     dirnames = [x.split(_AEON_TOPDIR).pop() for x in folder[1]]
     mime = magic.Magic(mime=True)
 
+    dirnames.sort()
+
     files = []
     for filename in folder[2]:
         f = os.path.join(_AEON_TOPDIR, root, filename)

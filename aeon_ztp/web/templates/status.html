@@ -39,7 +39,7 @@
       <td>{{device.os_version}}</td>
       <td><span class="label label-{{class}}">{{device.state}}</span></td>
       <td>{{device.message}}</td>
-      <td>{{" ".join(device.updated_at.split("T"))}}</td>
+      <td>{{" ".join(device.updated_at.split("T")).split('.')[0]}}</td>
       <td><a href="/logs?bootstrapper=y&searchfilter={{device.ip_addr}}">ZTP Logs</a></td>
       <td><a href="/devices/delete/{{device.ip_addr}}"><button type="button" class="btn btn-warning">Delete</button></a></td>
     </tr>
