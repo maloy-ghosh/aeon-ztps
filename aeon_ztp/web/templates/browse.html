@@ -17,16 +17,13 @@
 {% endif %}
 </ol>
 
-<table class="table table-condensed">
-  <tr><th>Folder Name</th></td></tr>
-  {% if dirpath != '/' %}
-    <tr><td><a href="/browse/{{parent}}">Parent directory</a></td></tr>
-  {% endif %}
+<table class="table table-hover">
+  <tr><th>Folder Name</th></td><th></th></td></tr>
 {% for folder in dirnames -%}
     {% if dirpath == '/' %}
     <tr><td><a href="/browse/{{folder}}"</td>{{folder}}</tr>
     {% else %}
-  <tr><td><a href="/browse/{{dirpath}}/{{folder}}"</td>{{folder}}</tr>
+    <tr><td><a href="/browse/{{dirpath}}/{{folder}}"</td>{{folder}}<td style="text-align:right"><a href="/delete/{{dirpath}}/{{folder}}">Delete</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
     {% endif %}
 {% endfor %}
 </table>

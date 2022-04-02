@@ -13,6 +13,7 @@ import os
 import pwd
 import re
 import datetime
+import shutil
 
 import aeon_ztp
 import magic
@@ -591,20 +592,34 @@ def delete_file(filename):
 
     """
     folder = os.path.split(filename)[0]
+    filename = os.path.join(_AEON_TOPDIR, filename)
 
-    # TODO: check if path is allowed first
-    try:
-        filename = os.path.join(_AEON_TOPDIR, filename)
-        os.remove(filename)
-        flash('Deleted file: {filename}'.format(filename=filename), 'success')
-        return browse(root=folder)
+    if (os.path.isdir(filename)):
+        try:
+            shutil.rmtree(filename)
+            flash('Deleted directory: {filename}'.format(filename=filename), 'success')
+            return browse(root=folder)
 
-    except (IOError, OSError) as e:
-        code = e[0]
-        reason = e[1]
-        flash('Error: Could not delete file {filename}: {reason} ({code})'.format(filename=filename, reason=reason,
+        except (IOError, OSError) as e:
+            code = e[0]
+            reason = e[1]
+            flash('Error: Could not delete directory {filename}: {reason} ({code})'.format(filename=filename, reason=reason,
                                                                                   code=code), 'danger')
-        return browse(root=folder)
+            return browse(root=folder)
+
+    else:
+        # TODO: check if path is allowed first
+        try:
+            os.remove(filename)
+            flash('Deleted file: {filename}'.format(filename=filename), 'success')
+            return browse(root=folder)
+
+        except (IOError, OSError) as e:
+            code = e[0]
+            reason = e[1]
+            flash('Error: Could not delete file {filename}: {reason} ({code})'.format(filename=filename, reason=reason,
+                                                                                      code=code), 'danger')
+            return browse(root=folder)
 
 
 @web.route('/firmware')
