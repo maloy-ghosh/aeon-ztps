@@ -312,6 +312,7 @@ def do_push_config(dev):
     
     device_dir = os.path.join(config_dir, dev.facts['serial_number'])
     device_startup_path = os.path.join(device_dir, "startup.cfg")
+    device_dev_path = os.path.join(device_dir, "device.cfg")
     device_template_file = os.path.join(dev.facts['serial_number'], "device.yaml.j2")
 
     initaialize_jinja(config_dir)
@@ -338,6 +339,7 @@ def do_push_config(dev):
             changed = changed or try_push_yaml_cfg(dev, config_dir, all_template_file)
             changed = changed or try_push_cfg_file(dev, model_fpath)
             changed = changed or try_push_yaml_cfg(dev, config_dir, model_template_file)
+            changed = changed or try_push_cfg_file(dev, device_dev_path)
             changed = changed or try_push_yaml_cfg(dev, config_dir, device_template_file)
                 
 
