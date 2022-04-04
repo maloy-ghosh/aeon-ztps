@@ -28,6 +28,27 @@
 {% endfor %}
 </table>
 
+{% if not dirpath == '/' %}
+<p>Create/copy new directory in {{ dirpath }}
+
+<form action="/copydir/{{dirpath}}" method=post class="form-inline">
+
+  <div class="form-group">
+    <label for="dest">New directory</label>
+    <input type="text" id="dest" name="dest" placeholder="New directory name">
+  </div>
+
+  <div class="form-group">
+    <label for="src">Copy from</label>
+    <input type="text" id="src" name="src" placeholder="Existing directory to copy">
+  </div>
+
+  <button type="submit" class="btn btn-default">Submit</button>
+</form>
+</p>
+{% endif %}
+
+
 
 {% for file in files -%}
   {% if loop.first %}

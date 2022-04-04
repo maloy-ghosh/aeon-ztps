@@ -14,6 +14,7 @@ import pwd
 import re
 import datetime
 import shutil
+from distutils.dir_util import copy_tree
 
 import aeon_ztp
 import magic
@@ -426,6 +427,53 @@ def dhcp_leases():
                                                                                            filename=_dhcp_leases_file)
     flash(error, 'danger')
     return render_template('error.html', error=error)
+
+
+@web.route('/copydir/<path:folder>', methods=['POST'])
+def copydir(folder):
+    if not allowed_path(folder):
+        return render_template('error.html', error="Invalid path to upload to {}".format(folder))
+
+    src = ""
+    dest = ""
+    srcpath = ""
+    dstpath = ""
+
+    try:
+        dest =  request.form.get("dest")
+        dstpath = os.path.join(_AEON_TOPDIR, folder, dest)
+    except:
+        flash('Target directory must be provided', 'danger');
+
+
+    try:
+        src = request.form.get("src")
+        srcpath = os.path.join(_AEON_TOPDIR, folder, src)
+    except:
+        pass
+
+    if os.path.isdir(dstpath):
+        flash('Target directory {dest} already exists'.format(dest=dest), "danger")
+        return browse(root=folder)
+
+    if src != None and not os.path.isdir(srcpath):
+        flash('Target directory {src} does not exist'.format(src=src), "danger")
+        return browse(root=folder)
+
+    try:
+        if src:
+            copy_tree(srcpath, dstpath)
+            flash('Created directory {dest} from {src}'.format(dest=dest, src=src), 'success')
+        else:
+            os.makedirs(dstpath)
+            flash('Created directory {dest}'.format(dest=dest), 'success')
+    except Exception as e:
+        flash(e.message, 'danger')
+        return browse(root=folder)
+
+
+    return browse(root=folder)
+
 
 
 @web.route('/upload/<path:folder>', methods=['POST'])
