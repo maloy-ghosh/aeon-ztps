@@ -1,0 +1,21 @@
+---
+- name: Install CGIT NGINX sites-avaiable
+  copy: src=nginx.cgit.conf dest=/etc/nginx/sites-available/cgit mode=644 owner=root group=root
+
+- name: Install CGIT NGINX site-enabled
+  copy: src=nginx.cgit.conf dest=/etc/nginx/sites-enabled/cgit
+        mode=644 owner=root group=root
+
+- name: Install CGIT runtime configuration file
+  copy: src=cgitrc dest=/etc/cgitrc
+        mode=644 owner=root group=root
+
+- name: Install CGIT repo details
+  copy: src=cgitrepos dest=/etc/cgitrepos
+        mode=644 owner=root group=root
+
+- name: Enable the fcgiwrap service
+  service: name=fcgiwrap enabled=yes state=started
+
+- name: Restart the Nginx service
+  service: name=nginx state=restarted

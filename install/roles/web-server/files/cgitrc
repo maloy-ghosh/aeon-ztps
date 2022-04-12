@@ -1,0 +1,43 @@
+#
+# cgit config
+# see cgitrc(5) for details
+
+css=/cgit.css
+logo=/cgit.png
+
+
+virtual-root=/
+
+
+snapshots=tar.gz tar.bz2 zip
+
+# Show owner on index page
+enable-index-owner=1
+
+# Source gitweb.description, gitweb.owner from each project config
+enable-git-config=1
+
+# Allow http transport git clone
+enable-git-clone=1
+
+# Show extra links for each repository on the index page
+enable-index-links=1
+
+# Remove .git suffix from project display
+remove-suffix=1
+
+# Enable ASCII art commit history graph on the log pages
+enable-commit-graph=1
+
+# Show number of affected files per commit on the log pages
+enable-log-filecount=1
+
+# Show number of added/removed lines per commit on the log pages
+enable-log-linecount=1
+
+# Sort branches by date
+branch-sort=age
+
+clone-url=http://$SERVER_ADDR:$SERVER_PORT/$CGIT_REPO_URL
+
+include=/etc/cgitrepos

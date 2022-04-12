@@ -1,0 +1,4 @@
+repo.url=ztpcfg
+repo.path=/opt/aeonztps/.git
+repo.desc=ZTP saved bootstrap configs
+repo.owner=ZTP
