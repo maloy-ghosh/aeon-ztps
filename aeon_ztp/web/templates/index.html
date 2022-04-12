@@ -5,6 +5,22 @@
     <p>This software makes it easy to boot up your NOS to work with your infrastructure.</p>
     <p>Check if <a href="{{ url_for('web.status') }}">devices are ready</a></p>
     <p>Open some <a href="{{ url_for('web.show_log') }}">log files</a> <span class="badge">5</span></p>
+    {% if data.cfggitpresent %}
+    <p>Browse <a href="{{ url_for('web.cfgbrowse') }}">configuration repository</a></p>
+    {% endif %}
     <!-- <p>Report on <a href="{{ url_for('web.dhcp_leases') }}">dhcp status</a></p> -->
   </div>
+
+{% if not data.cfggitpresent %}
+<p>
+<form action="/cfginit" method=post>
+  <div class="form-group">
+    <label for="import">Initialize ZTP repository</label>
+    <input class="form-control" type="text" id="import" name="import" placeholder="git clone URL/ Empty for raw initialization">
+  </div>
+  <button type="submit" class="btn btn-default">Submit</button>
+</form>
+</p>
+
+{% endif %}
 {% endblock %}

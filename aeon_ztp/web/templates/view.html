@@ -24,7 +24,7 @@
   <tr><th><p>File name </p></th><td><p> : {{ filename }} </p></td></tr>
   <tr><th><p>File size </p></th><td><p> : {{ stat.st_size|filesizeformat }}</p></td></tr>
 </table>
-<div class="highlight">
+<div>
 {{ content|safe }}
 </div>
 {% endblock %}

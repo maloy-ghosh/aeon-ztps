@@ -14,6 +14,7 @@ import pwd
 import re
 import datetime
 import shutil
+import subprocess
 from distutils.dir_util import copy_tree
 
 import aeon_ztp
@@ -238,7 +239,13 @@ def _global_variables():
 def index():
     """ Index page of web application
     """
-    return render_template('index.html')
+    data = {}
+    data["cfggitpresent"] = False
+
+    if os.path.isdir(os.path.join(_AEON_TOPDIR, ".git")):
+        data["cfggitpresent"] = True
+
+    return render_template('index.html', data = data)
 
 
 @web.route('/vendor_images/<path:image>')
@@ -364,6 +371,19 @@ def status_for_os(osname):
     g.title = "Device Status"
     return render_template('status.html', devices=devices)
 
+@web.route('/cfgbrowse')
+def cfgbrowse():
+    base = request.headers.get('Host').split(':')[0]
+    return redirect("http://%s:9000/ztpcfg" % (base), code=302)
+
+@web.route('/cfg')
+def cfg():
+    data = {}
+    data["cfggitpresent"] = False
+
+    if os.path.isdir(os.path.join(_AEON_TOPDIR, ".git")):
+        data["cfggitpresent"] = True
+    return render_template('cfg.html', data = data)
 
 @web.route('/status/hw/<hw>')
 def status_for_hw(hw):
@@ -429,6 +449,46 @@ def dhcp_leases():
     return render_template('error.html', error=error)
 
 
+@web.route('/cfginit', methods=['POST'])
+def cfginit():
+    remoteip = request.remote_addr
+    basegitignore = """
+*
+!*/
+!etc/**
+"""
+    importform = None
+    try:
+        importform = request.form.get('import')
+    except:
+        pass
+
+    my_env = dict(os.environ, GIT_TERMINAL_PROMPT='0', GIT_SSH_COMMAND='ssh -oBatchMode=yes')
+    currentdir = os.getcwd()
+    os.chdir(_AEON_TOPDIR)
+    try:
+        if importform:
+            subprocess.check_output(['git', 'clone', '--bare',  importform, '.git'], env=my_env)
+            subprocess.check_output(['git', 'init'])
+            subprocess.check_output(['git', 'reset', '--hard'])
+        else:
+            f = open(".gitignore", "w")
+            f.write(basegitignore)
+            f.close()
+            subprocess.check_output(['git', 'init'])
+            subprocess.check_output(['git', 'config', 'user.name', 'ztp'])
+            subprocess.check_output(['git', 'config', 'user.email', 'ztpserver@ztpserver'])
+            subprocess.check_output(['git', 'add', 'etc'])
+            subprocess.check_output(['git', 'commit', '-m Initialize ZTP config repo (triggerd from %s)' % (remoteip) ])
+            #
+    except Exception as e:
+        flash(e.message, 'danger')
+        return render_template('error.html', error=e.message)
+
+    os.chdir(currentdir)
+    return index()
+
+
 @web.route('/copydir/<path:folder>', methods=['POST'])
 def copydir(folder):
     if not allowed_path(folder):
@@ -440,14 +500,14 @@ def copydir(folder):
     dstpath = ""
 
     try:
-        dest =  request.form.get("dest")
+        dest =  secure_filename(request.form.get("dest"))
         dstpath = os.path.join(_AEON_TOPDIR, folder, dest)
     except:
         flash('Target directory must be provided', 'danger');
 
 
     try:
-        src = request.form.get("src")
+        src = secure_filename(request.form.get("src"))
         srcpath = os.path.join(_AEON_TOPDIR, folder, src)
     except:
         pass
