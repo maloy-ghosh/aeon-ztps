@@ -1579,7 +1579,10 @@ pre code {
 }
 .pre-scrollable {
   max-height: 340px;
-  overflow-y: scroll;
+  /* overflow-y: scroll; */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse;
 }
 .container {
   padding-right: 15px;
