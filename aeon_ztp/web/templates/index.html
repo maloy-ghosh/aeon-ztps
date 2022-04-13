@@ -6,7 +6,7 @@
     <p>Check if <a href="{{ url_for('web.status') }}">devices are ready</a></p>
     <p>Open some <a href="{{ url_for('web.show_log') }}">log files</a> <span class="badge">5</span></p>
     {% if data.cfggitpresent %}
-    <p>Browse <a href="{{ url_for('web.cfgbrowse') }}">configuration repository</a></p>
+    <p>Browse <a href="{{ url_for('web.cfgbrowse') }}" target="_blank">configuration repository</a></p>
     {% endif %}
     <!-- <p>Report on <a href="{{ url_for('web.dhcp_leases') }}">dhcp status</a></p> -->
   </div>

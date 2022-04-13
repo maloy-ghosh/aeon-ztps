@@ -8,6 +8,7 @@
 import os
 from datetime import datetime
 from os import path
+import subprocess
 
 import aeon_ztp
 import pkg_resources
@@ -55,7 +56,35 @@ def valid_paths():
         '/etc',
         '/vendor_images',
         '/tftpboot',
+        '/bin'
     ]
+
+@api.route('/upload/<path:filename>', methods=['PUT'])
+def upload_file(filename):
+    if (filename == ''):
+        return jsonify(ok=False,
+                       message='No input file'), 400
+
+    d_name = os.path.dirname(filename)
+
+    if (not allowed_path(d_name)):
+        return jsonify(ok=False,
+                       message='Path: %s prohibited for upload.' % (d_name)), 403
+
+    filepath = os.path.join(_AEON_TOPDIR, filename)
+
+    try:
+        f = open(filepath, "w")
+        f.write(request.data)
+        f.close()
+        git_commit("Add {file} (triggered by API from {remote})".format(file=filename, remote=request.remote_addr))
+        return jsonify(ok=True, message=filename)
+    except Exception, e:
+        return jsonify(ok=False,
+                       message=repr(e)), 400
+
+
+
 
 @api.route('/downloads/<path:filename>', methods=['GET'])
 def download_file(filename):
@@ -105,6 +134,20 @@ def api_env():
 #                                 Utility Functions
 #
 # -----------------------------------------------------------------------------
+
+def git_commit(message):
+    olddir = os.getcwd()
+    os.chdir(_AEON_TOPDIR)
+    try:
+        subprocess.check_output(['git', 'add', 'etc'])
+        subprocess.check_output(['git', 'commit', '-m %s' % (message) ])
+    except:
+        raise
+
+    os.chdir(olddir)
+    return
+
+
 
 
 def find_device(db, table, dev_data):
@@ -288,36 +331,6 @@ def _put_device_facts():
             item=rqst_data), 404
 
     return jsonify(ok=True)
-
-# -----------------------------------------------------------------------------
-#                  PUT: /upload/path/to/file
-# -----------------------------------------------------------------------------
-
-
-@api.route('/upload/<path:filename>', methods=['PUT'])
-def upload_file(filename):
-    if (filename == ''):
-        return jsonify(ok=False,
-                       message='No input file'), 400
-
-    d_name = os.path.dirname(filename)
-
-    if (not allowed_path(d_name)):
-        return jsonify(ok=False,
-                       message='Path: %s prohibited for upload.' % (d_name)), 403
-
-    filepath = os.path.join(_AEON_TOPDIR, filename)
-
-    try:
-        f = open(filepath, "w")
-        f.write(request.data)
-        f.close()
-        return jsonify(ok=True, message="File uploaded")
-
-    except Exception, e:
-        return jsonify(ok=False,
-                       message=repr(e)), 400
-
 
 
 # -----------------------------------------------------------------------------

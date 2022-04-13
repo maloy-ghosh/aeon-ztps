@@ -220,6 +220,19 @@ def valid_paths():
     ]
 
 
+def git_commit(message):
+    olddir = os.getcwd()
+    os.chdir(_AEON_TOPDIR)
+    try:
+        subprocess.check_output(['git', 'add', 'etc'])
+        subprocess.check_output(['git', 'commit', '-m %s' % (message) ])
+    except:
+        raise
+
+    os.chdir(olddir)
+    return
+
+
 # FLASK ROUTING
 
 @web.before_request
@@ -523,9 +536,11 @@ def copydir(folder):
     try:
         if src:
             copy_tree(srcpath, dstpath)
+            git_commit("Created directory {dest} from {src} (triggered by web from {remote})".format(dest=dest, src=src, remote=request.remote_addr))
             flash('Created directory {dest} from {src}'.format(dest=dest, src=src), 'success')
         else:
             os.makedirs(dstpath)
+            git_commit("Created directory {dest} (triggered by web from {remote})".format(dest=dest, src=src, remote=request.remote_addr))
             flash('Created directory {dest}'.format(dest=dest), 'success')
     except Exception as e:
         flash(e.message, 'danger')
@@ -563,6 +578,7 @@ def upload(folder):
     if filename:
         try:
             filename.save(filepath)
+            git_commit("Add {folder}/{file} (triggered by web from {remote})".format(folder=folder,file=filename.filename, remote=request.remote_addr))
             # upload success!
             flash('File upload successful:{file}'.format(file=filepath), 'success')
             return browse(root=folder)
@@ -699,12 +715,14 @@ def delete_file(filename):
     Returns:
 
     """
+    inputf = filename
     folder = os.path.split(filename)[0]
     filename = os.path.join(_AEON_TOPDIR, filename)
 
     if (os.path.isdir(filename)):
         try:
             shutil.rmtree(filename)
+            git_commit("Deleted {file} (triggered by web from {remote})".format(file=inputf, remote=request.remote_addr))
             flash('Deleted directory: {filename}'.format(filename=filename), 'success')
             return browse(root=folder)
 
@@ -719,6 +737,7 @@ def delete_file(filename):
         # TODO: check if path is allowed first
         try:
             os.remove(filename)
+            git_commit("Deleted {file} (triggered by web from {remote})".format(file=inputf, remote=request.remote_addr))
             flash('Deleted file: {filename}'.format(filename=filename), 'success')
             return browse(root=folder)
 
