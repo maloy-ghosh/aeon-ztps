@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content -%}
+{% block meta %}
+<link href="/web/static/css/pygments.css" rel="stylesheet" />
+{% endblock %}
+
+<body>
+<h2 id="ztp-basic-message-flow">ZTP basic message flow</h2>
+<p>Following messages are involved.</p>
+<ul>
+<li><p>Device comes up and sends DHCP resquests in network.</p></li>
+<li><p>DHCP server provides <code>bootfile-name</code> script url together with ip address information.</p></li>
+<li><p>Device downloads the scripts and executes it, which internally triggers ZTP server to initiate bootstrapping.</p></li>
+<li><p>ZTP server sends configuration to device and upgrades release if version mismatch is detected.</p></li>
+</ul>
+<h2 id="dhcp-server-configuration">DHCP Server configuration</h2>
+<p>Following section needs to be added in DHCP server configuration (assuming isc-dhcp-server)</p>
+<pre><code>class &quot;cros&quot; {
+     match if (substring(option vendor-class-identifier, 0, 5) = &quot;cros.&quot;);
+     option bootfile-name &quot;http://&lt;ztpserverip&gt;:8080/downloads/ztp-cros.sh&quot;;
+}</code></pre>
+<h2 id="cros">CROS</h2>
+<p>Following are important directories for CROS devices (<code>Browse files</code>)</p>
+<ul>
+<li><p><code>etc/configs/cros:</code> Configuration files for CROS devices.</p></li>
+<li><p><code>etc/profiles/cros:</code> OS selector configuration for CROS devices.</p></li>
+<li><p><code>vendor_images/cros:</code> Release upgrade files for CROS devices.</p></li>
+</ul>
+<p>Details of these are</p>
+<h3 id="etcconfigscros">etc/configs/cros</h3>
+<p>When a device initiates bootstrapping, configuration files are prioritized as</p>
+<ul>
+<li><p>First a file <code>etc/configs/cros/&lt;SERIALNUM&gt;/startup.cfg</code> is searched. If this file is found, only this configuration file is played to device.</p></li>
+<li><p>If <code>startup.cfg</code> file is not found, following configuration are played in this order</p></li>
+<li><p>Device independent configuration files are played.</p>
+<ul>
+<li><p><code>etc/configs/cros/all.cfg:</code> Configuration in device cfg file syntax.</p></li>
+<li><p><code>etc/configs/cros/all.yaml.j2:</code> Configuration in YAML format.</p></li>
+</ul></li>
+<li><p>Device model specific configuration files are played.</p>
+<ul>
+<li><p><code>etc/configs/cros/&lt;MODEL&gt;.cfg</code></p></li>
+<li><p><code>etc/configs/cros/&lt;MODEL&gt;.yaml.j2</code></p></li>
+</ul></li>
+<li><p>Device specific configuration files are played.</p>
+<ul>
+<li><p><code>etc/configs/cros/&lt;SERIALNUM&gt;/device.cfg</code></p></li>
+<li><p><code>etc/configs/cros/&lt;SERIALNUM&gt;/device.yaml.j2</code></p></li>
+</ul></li>
+</ul>
+<h3 id="etcprofilescrosos-selector.cfg">etc/profiles/cros/os-selector.cfg</h3>
+<p>Syntax of os-selector file is</p>
+<pre><code>B6FADFCD381F:
+    regex_match: CROS-H-1\.4\.10-4952
+    image: onie-rootfs-CROS-1.4.10.bin
+
+spt2-lxc:
+    regex_match: CROS-H-.*
+    image: 
+
+default:
+    regex_match: CROS-.*
+    image: 
+  </code></pre>
+<p>ZTP server tries to match (<code>regex_match</code>) incoming device version with selector configuration. <strong>If regex does not match and <code>image</code> is specified corresponding release is upgraded.</strong></p>
+<p>For matching following preference order is maintained</p>
+<ul>
+<li><p>Look for exact match for <code>SERIALNUM</code>.</p></li>
+<li><p>Next look for match for <code>MODEL</code>.</p></li>
+<li><p>Otherwise <code>default</code> target is matched.</p></li>
+</ul>
+
+</body>
+
+{% endblock %}

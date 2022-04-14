@@ -260,6 +260,9 @@ def index():
 
     return render_template('index.html', data = data)
 
+@web.route('/nos_readme')
+def nos_readme():
+    return render_template('nos_readme.html')
 
 @web.route('/vendor_images/<path:image>')
 def download_vendor_image(image):
