@@ -22,9 +22,9 @@
 <h2 id="cros">CROS</h2>
 <p>Following are important directories for CROS devices (<code>Browse files</code>)</p>
 <ul>
-<li><p><code>etc/configs/cros:</code> Configuration files for CROS devices.</p></li>
-<li><p><code>etc/profiles/cros:</code> OS selector configuration for CROS devices.</p></li>
-<li><p><code>vendor_images/cros:</code> Release upgrade files for CROS devices.</p></li>
+	<li><p><code><a href="{{ url_for('web.browse',  root='/etc/configs/cros') }}">etc/configs/cros:</a></code> Configuration files for CROS devices.</p></li>
+	<li><p><code><a href="{{ url_for('web.browse',  root='/etc/profiles/cros') }}">etc/profiles/cros:</a></code> OS selector configuration for CROS devices.</p></li>
+	<li><p><code><a href="{{ url_for('web.browse',  root='/vendor_images/cros') }}">vendor_images/cros:</a></code> Release upgrade files for CROS devices.</p></li>
 </ul>
 <p>Details of these are</p>
 <h3 id="etcconfigscros">etc/configs/cros</h3>
@@ -34,8 +34,8 @@
 <li><p>If <code>startup.cfg</code> file is not found, following configuration are played in this order</p></li>
 <li><p>Device independent configuration files are played.</p>
 <ul>
-<li><p><code>etc/configs/cros/all.cfg:</code> Configuration in device cfg file syntax.</p></li>
-<li><p><code>etc/configs/cros/all.yaml.j2:</code> Configuration in YAML format.</p></li>
+	<li><p><code><a href="{{ url_for('web.view_file',  filename='etc/configs/cros/all.cfg') }}">etc/configs/cros/all.cfg:</a></code> Configuration in device cfg file syntax.</p></li>
+	<li><p><code><a href="{{ url_for('web.view_file',  filename='etc/configs/cros/all.yaml.j2') }}">etc/configs/cros/all.yaml.j2:</a></code> Configuration in YAML format.</p></li>
 </ul></li>
 <li><p>Device model specific configuration files are played.</p>
 <ul>
