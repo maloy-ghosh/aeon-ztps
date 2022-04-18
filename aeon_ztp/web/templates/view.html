@@ -7,6 +7,8 @@
 <ol class="breadcrumb">
   {# <li><a href="{{ url_for('browse') }}">browse</a></li> #}
   <li><a href="{{ url_for('web.browse') }}">browse</a></li>
+
+{% if folder %}
 {% if folder != '/' %}
   {% set ns = namespace(prev='') %}
   {% for crumb in folder.split('/') -%}
@@ -18,13 +20,19 @@
     {% endif %}
   {% endfor %}
 {% endif %}
+{% endif %}
 </ol>
 
+{% if filename and stat %}
 <table>
   <tr><th><p>File name </p></th><td><p> : {{ filename }} </p></td></tr>
   <tr><th><p>File size </p></th><td><p> : {{ stat.st_size|filesizeformat }}</p></td></tr>
 </table>
 <div>
+{% endif %}
+
+{% if content %}
 {{ content|safe }}
+{% endif %}
 </div>
 {% endblock %}
