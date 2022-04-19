@@ -11,6 +11,7 @@
     - libxslt-dev
     - zlib1g-dev
     - rsync
+    - git
 
 - name: Install Linux utility packages
   apt: name={{ item }} state=present
