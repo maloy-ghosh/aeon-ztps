@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+# Copyright 2022-present, Centre For Development of Telematics. All rights reserved.
 import sys
 import os
 import json
@@ -38,7 +38,7 @@ _DEFAULTS = {
 
 psr = argparse.ArgumentParser(
     prog=_PROGNAME,
-    description="Aeon-ZTP bootstrapper for Cumulus Linux",
+    description="Aeon-ZTP bootstrapper for CROS Linux",
     add_help=True)
 
 psr.add_argument(
