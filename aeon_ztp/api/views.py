@@ -140,7 +140,7 @@ def git_commit(message):
     os.chdir(_AEON_TOPDIR)
     try:
         subprocess.check_output(['git', 'add', 'etc'])
-        subprocess.check_output(['git', 'commit', '-m %s' % (message) ])
+        subprocess.check_output(["git diff-index --quiet HEAD || git commit -m '%s'" % (message) ], shell=True)
     except:
         raise
 
